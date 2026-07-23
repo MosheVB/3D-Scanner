@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+.DS_Store
+.cache/
+scans/
+temp/
+logs/
+calibration/
+agent_runs/
+.anthropic_api_key

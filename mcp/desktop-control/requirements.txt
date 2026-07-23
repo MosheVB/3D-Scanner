@@ -1,0 +1,5 @@
+# MCP desktop-control server only (not required for 3D scanner capture/process).
+mcp>=1.6.0
+mss>=9.0.0
+pyautogui>=0.9.54
+pyperclip>=1.9.0

@@ -1,0 +1,19 @@
+# 3D-Scanner conda environment (conda-forge only; avoids Anaconda channel TOS).
+#
+# Quick create (recommended if `conda env create` fails on channel TOS):
+#   conda create -n 3d-scanner python=3.11 pip -c conda-forge --override-channels -y
+#   conda activate 3d-scanner
+#   conda install open3d -c conda-forge --override-channels -y
+#   pip install -r requirements.txt
+#
+# Or from this file:
+#   conda env create -f environment.yml --override-channels
+name: 3d-scanner
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - open3d>=0.18
+  - pip:
+      - -r requirements.txt
