@@ -58,7 +58,11 @@ python -m scanner capture --mode turntable --name myobject   # live capture UI
 python -m scanner web                                        # web control panel
 python scripts/ble_scan.py                                   # find your turntable's BLE address
 python scripts/turntable_test.py                             # verify BLE commands, no camera needed
+python scripts/phone_frames.py --video spin.mov --out out/   # phone rotation video -> per-degree frames
 ```
+
+Evaluating a phone camera as a capture source? See
+[docs/iphone-photogrammetry.md](docs/iphone-photogrammetry.md).
 
 ## Hardware
 
