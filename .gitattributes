@@ -1,0 +1,18 @@
+# Keep line endings sane across the Windows capture host and the Linux box.
+# Without this, a Windows checkout with core.autocrlf=true commits CRLF into
+# shell scripts, and Linux then fails with "bad interpreter: /bin/bash^M".
+* text=auto eol=lf
+
+# Windows-only helpers keep CRLF so they behave in cmd.exe / PowerShell.
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Never munge binary assets.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ply binary
+*.obj binary
+*.bag binary
+*.npy binary
+*.npz binary

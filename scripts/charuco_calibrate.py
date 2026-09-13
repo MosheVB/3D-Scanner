@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """ChArUco-board intrinsic calibration for the Intel RealSense D405.
 
 Usage

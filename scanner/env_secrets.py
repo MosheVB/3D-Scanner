@@ -1,4 +1,4 @@
-﻿"""Load optional secrets (e.g. ANTHROPIC_API_KEY) into os.environ at process start."""
+"""Load optional secrets (e.g. ANTHROPIC_API_KEY) into os.environ at process start."""
 
 from __future__ import annotations
 

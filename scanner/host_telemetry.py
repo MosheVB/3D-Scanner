@@ -127,6 +127,70 @@ def _linux_cpu_temp_c() -> float | None:
     return None
 
 
+_CPU_HWMON_NAMES = ("coretemp", "k10temp", "zenpower", "cpu_thermal")
+_GPU_HWMON_NAMES = ("amdgpu", "nouveau", "radeon")
+
+
+def _read_sysfs_int(path: str) -> int | None:
+    try:
+        with open(path, encoding="utf-8") as fh:
+            raw = fh.read().strip()
+    except OSError:
+        return None
+    return int(raw) if raw.lstrip("-").isdigit() else None
+
+
+def _read_sysfs_text(path: str) -> str:
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return fh.read().strip().lower()
+    except OSError:
+        return ""
+
+
+def _linux_hwmon_sensors(root: str = "/sys/class/hwmon") -> tuple[
+    float | None, float | None, int | None
+]:
+    """CPU temp, GPU temp and fan RPM from hwmon.
+
+    thermal_zone often exposes only ACPI zones on desktop x86 — package temps
+    live under hwmon as coretemp (Intel) or k10temp (AMD), and fan tachometers
+    are hwmon-only. Takes root so it can be pointed at a fixture in tests.
+    """
+    import glob
+
+    cpu_temps: list[float] = []
+    gpu_temps: list[float] = []
+    fan_rpms: list[int] = []
+
+    for chip in sorted(glob.glob(f"{root}/hwmon*")):
+        name = _read_sysfs_text(f"{chip}/name")
+
+        for temp_path in sorted(glob.glob(f"{chip}/temp*_input")):
+            milli = _read_sysfs_int(temp_path)
+            if milli is None:
+                continue
+            celsius = milli / 1000.0 if abs(milli) > 1000 else float(milli)
+            if not 5 <= celsius <= 120:
+                continue
+            label = _read_sysfs_text(temp_path.replace("_input", "_label"))
+            if name in _GPU_HWMON_NAMES or "gpu" in label:
+                gpu_temps.append(celsius)
+            elif name in _CPU_HWMON_NAMES or "package" in label or "tctl" in label:
+                cpu_temps.append(celsius)
+
+        for fan_path in sorted(glob.glob(f"{chip}/fan*_input")):
+            rpm = _read_sysfs_int(fan_path)
+            if rpm is not None and 0 < rpm < 30000:
+                fan_rpms.append(rpm)
+
+    return (
+        max(cpu_temps) if cpu_temps else None,
+        max(gpu_temps) if gpu_temps else None,
+        max(fan_rpms) if fan_rpms else None,
+    )
+
+
 def _nvidia_gpu_temp_c() -> float | None:
     if shutil.which("nvidia-smi") is None:
         return None
@@ -172,7 +236,13 @@ def _collect_host_telemetry_sync() -> dict[str, Any]:
                 "CPU/GPU/fan n/a — run LibreHardwareMonitor (WMI) for readings on Windows."
             )
     elif system == "Linux":
-        cpu = _linux_cpu_temp_c()
+        cpu, gpu, fan_rpm = _linux_hwmon_sensors()
+        if cpu is None:
+            cpu = _linux_cpu_temp_c()
+        if cpu is None and gpu is None and fan_rpm is None:
+            notes.append(
+                "CPU/GPU/fan n/a — install lm-sensors and run sensors-detect for readings on Linux."
+            )
     elif system == "Darwin":
         try:
             proc = subprocess.run(

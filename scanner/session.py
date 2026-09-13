@@ -65,8 +65,8 @@ class ScanSession:
             frames=[
                 FrameRecord(
                     index=int(f.get("index", 0)),
-                    rgb=str(f["rgb"]),
-                    depth=str(f["depth"]),
+                    rgb=_posix_rel(f["rgb"]),
+                    depth=_posix_rel(f["depth"]),
                     tilt_deg=f.get("tilt_deg"),
                     rotation_deg=f.get("rotation_deg"),
                 )
@@ -75,6 +75,16 @@ class ScanSession:
         )
         session._root = root  # type: ignore[attr-defined]
         return session
+
+
+def _posix_rel(value: str) -> str:
+    """Normalise a stored frame path to forward slashes.
+
+    Manifests written on Windows store "frames\\0000_rgb.png"; on Linux that
+    backslash is an ordinary filename character, so the frame would not be
+    found. New manifests are written posix-style; this keeps old ones loadable.
+    """
+    return str(value).replace("\\", "/")
 
 
 def _attach_root(session: ScanSession, root: Path) -> ScanSession:
@@ -151,8 +161,8 @@ def add_frame(
 
     record = FrameRecord(
         index=idx,
-        rgb=str(rgb_path.relative_to(session_root(session))),
-        depth=str(depth_path.relative_to(session_root(session))),
+        rgb=rgb_path.relative_to(session_root(session)).as_posix(),
+        depth=depth_path.relative_to(session_root(session)).as_posix(),
         tilt_deg=tilt_deg,
         rotation_deg=rotation_deg,
     )
